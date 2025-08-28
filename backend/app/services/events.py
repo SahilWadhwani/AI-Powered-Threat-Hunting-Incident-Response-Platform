@@ -5,6 +5,7 @@ from dateutil import parser as dateparser
 
 from ..models.event import EventNormalized
 from ..schemas.events import EventIn
+from .enrich import country_for_ip   # <— add
 
 def _parse_timestamp(ts: str) -> datetime:
     # accept ISO8601 and common formats; ensure tz-aware
@@ -15,6 +16,7 @@ def _parse_timestamp(ts: str) -> datetime:
     return dt
 
 def normalize_event(e: EventIn) -> EventNormalized:
+    country = e.country or country_for_ip(e.src_ip)  # <— enrich if missing
     return EventNormalized(
         timestamp=_parse_timestamp(e.timestamp),
         event_module=e.event_module,
@@ -25,7 +27,7 @@ def normalize_event(e: EventIn) -> EventNormalized:
         http_method=e.http_method,
         http_path=e.http_path,
         user_agent=e.user_agent,
-        country=e.country,
+        country=country,
         fields_json=e.fields or {},
         raw_ref=e.raw_ref,
     )

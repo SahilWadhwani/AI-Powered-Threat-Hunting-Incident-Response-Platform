@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     database_url: str
     redis_url: str
     jwt_secret: str = "change-me"
+    geoip_db_path: str | None = None   # <— add this
 
     model_config = SettingsConfigDict(
         env_prefix="",
@@ -12,5 +13,4 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
-# IMPORTANT: don't override with literals; load from .env / environment
 settings = Settings()
