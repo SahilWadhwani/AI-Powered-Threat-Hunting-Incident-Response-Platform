@@ -1,0 +1,46 @@
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+from sqlalchemy import select, and_
+from typing import Optional, List
+from ..core.deps import get_db
+from ..models.event import EventNormalized
+from ..schemas.events import EventOut
+
+router = APIRouter(prefix="/events", tags=["events"])
+
+@router.get("", response_model=List[EventOut])
+def list_events(
+    db: Session = Depends(get_db),
+    module: Optional[str] = Query(None, alias="module"),
+    action: Optional[str] = Query(None, alias="action"),
+    user: Optional[str] = None,
+    src_ip: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+):
+    conditions = []
+    if module:
+        conditions.append(EventNormalized.event_module == module)
+    if action:
+        conditions.append(EventNormalized.event_action == action)
+    if user:
+        conditions.append(EventNormalized.user == user)
+    if src_ip:
+        conditions.append(EventNormalized.src_ip == src_ip)
+
+    stmt = select(EventNormalized).order_by(EventNormalized.id.desc()).limit(limit).offset(offset)
+    if conditions:
+        stmt = stmt.where(and_(*conditions))
+
+    rows = db.execute(stmt).scalars().all()
+    return [
+        EventOut(
+            id=r.id,
+            event_module=r.event_module,
+            event_action=r.event_action,
+            src_ip=r.src_ip,
+            user=r.user,
+            http_path=r.http_path,
+        )
+        for r in rows
+    ]

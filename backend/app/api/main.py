@@ -3,6 +3,8 @@ from ..core.db import db_ping
 from ..core.redis_client import redis_ping
 from .auth import router as auth_router
 from .me import router as me_router
+from .ingest import router as ingest_router
+from .events import router as events_router
 
 app = FastAPI(title="SentinelX API", version="0.0.1")
 
@@ -27,3 +29,6 @@ def health_deep():
 app.include_router(auth_router)
 
 app.include_router(me_router)
+
+app.include_router(ingest_router)
+app.include_router(events_router)
