@@ -1,0 +1,13 @@
+id: SSH-Bruteforce
+description: Multiple failed SSH logins from same IP within 5 minutes
+severity: high
+where:
+  all:
+    - event_module: "auth"
+    - event_action: "ssh_login_failed"
+group_by: ["src_ip"]
+window: "5m"
+threshold:
+  count: ">= 6"
+notes: |
+  Tune threshold based on baseline; pair with anomaly score for edge cases.
