@@ -2,7 +2,8 @@ from .base import Base
 from .user import User
 from .event import EventNormalized
 from .detection import Detection
-from .case import Case, Comment  # add this line
+from .case import Case, Comment  
+from .block import BlockRule  
 
 # Alembic will import Base.metadata from here
 def get_metadata():

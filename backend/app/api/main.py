@@ -8,6 +8,7 @@ from .events import router as events_router
 from .detections import router as detections_router
 from .enrich import router as enrich_router
 from .cases import router as cases_router
+from .respond import router as respond_router
 
 app = FastAPI(title="SentinelX API", version="0.0.1")
 
@@ -38,3 +39,4 @@ app.include_router(events_router)
 app.include_router(detections_router)
 app.include_router(enrich_router)
 app.include_router(cases_router)
+app.include_router(respond_router)
