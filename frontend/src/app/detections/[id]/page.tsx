@@ -5,6 +5,7 @@ import { useAuth } from "@/store/auth";
 import { apiGet, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import Link from "next/link";
+import { createCase } from "@/lib/cases";
 
 type EvidenceEvent = {
   id: number;
@@ -57,6 +58,21 @@ export default function DetectionDetailPage() {
       toast.error("Failed to block IP", { description: err.message });
     },
   });
+
+  const createCaseMut = useMutation({
+  mutationFn: () =>
+    createCase(accessToken || "", {
+      title: data?.title ? `[Det ${id}] ${data.title}` : `Detection #${id}`,
+      description: data?.summary || "",
+      severity: data?.severity || "medium",
+      detection_ids: [id],
+    }),
+  onSuccess: (res) => {
+    toast.success("Case created");
+    router.push(`/cases/${res.id}`);
+  },
+  onError: (e: any) => toast.error("Failed to create case", { description: e.message }),
+});
 
   return (
     <main className="p-6 space-y-4">
@@ -126,6 +142,16 @@ export default function DetectionDetailPage() {
               <div className="text-sm text-neutral-600 mb-3">
                 {srcIp ? <>Primary source IP detected: <span className="font-medium">{srcIp}</span></> : "No source IP found on evidence"}
               </div>
+
+              <div className="rounded-lg border bg-white p-4">
+                <h3 className="font-medium mb-2">Case</h3>
+                <button
+                    onClick={() => createCaseMut.mutate()}
+                    className="w-full px-3 py-2 rounded-md bg-neutral-900 text-white hover:bg-black mb-3"
+                >
+                {createCaseMut.isPending ? "Creating…" : "Open case"}
+                </button>
+                </div>
               <button
                 disabled={!srcIp || blockMut.isPending}
                 onClick={() => srcIp && blockMut.mutate({ ip: srcIp })}
@@ -149,3 +175,4 @@ function Badge({ label, value }: { label: string; value: string }) {
     </span>
   );
 }
+
