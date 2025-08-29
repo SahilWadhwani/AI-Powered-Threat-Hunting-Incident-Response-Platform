@@ -9,8 +9,19 @@ from .detections import router as detections_router
 from .enrich import router as enrich_router
 from .cases import router as cases_router
 from .respond import router as respond_router
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="SentinelX API", version="0.0.1")
+
+# CORS for local Next.js
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/health")
 def health():
