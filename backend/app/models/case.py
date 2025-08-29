@@ -27,4 +27,4 @@ class Comment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     body: Mapped[str] = mapped_column(Text)
 
-    case: Mapped["Case"] = relationship("Case", back_populates="comments")
+    case: Mapped["Case"] = relationship("Case", back_populates="comments")  
