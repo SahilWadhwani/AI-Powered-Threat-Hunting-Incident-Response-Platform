@@ -11,6 +11,7 @@ from .cases import router as cases_router
 from .respond import router as respond_router
 from fastapi.middleware.cors import CORSMiddleware
 from .metrics import router as metrics_router
+from .demo import router as demo_router
 
 app = FastAPI(title="SentinelX API", version="0.0.1")
 
@@ -53,3 +54,4 @@ app.include_router(enrich_router)
 app.include_router(cases_router)
 app.include_router(respond_router)
 app.include_router(metrics_router)
+app.include_router(demo_router)

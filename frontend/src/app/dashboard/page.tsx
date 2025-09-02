@@ -1,8 +1,10 @@
 "use client";
 import { useAuth } from "@/store/auth";
-import { useQuery } from "@tanstack/react-query";
-import { apiGet } from "@/lib/api";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiGet, apiPost } from "@/lib/api";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type Summary = {
   events_last_24h: number;
@@ -15,18 +17,51 @@ type Summary = {
 
 export default function DashboardPage() {
   const { accessToken } = useAuth();
+  const router = useRouter();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<Summary>({
     queryKey: ["metrics", accessToken],
     queryFn: () => apiGet<Summary>("/metrics/summary", accessToken || undefined),
     enabled: !!accessToken,
+  });
+
+  const genMut = useMutation({
+    mutationFn: () =>
+      apiPost<{ ok: boolean; source_ip: string }>(
+        "/demo/generate",
+        {},
+        accessToken || undefined
+      ),
+    onSuccess: (res) => {
+      toast.success("Demo data generated", {
+        description: `Brute-force from ${res.source_ip}`,
+      });
+      refetch();           // refresh metrics
+      // router.push("/detections"); // uncomment if you want to jump there
+    },
+    onError: (e: any) => {
+      toast.error("Failed to generate demo data", { description: e.message });
+    },
   });
 
   return (
     <main className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <button onClick={() => refetch()} className="px-3 py-2 rounded-md border bg-white hover:bg-neutral-50">Refresh</button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => genMut.mutate()}
+            className="px-3 py-2 rounded-md bg-neutral-900 text-white hover:bg-black"
+          >
+            {genMut.isPending ? "Generating…" : "Generate demo data"}
+          </button>
+          <button
+            onClick={() => refetch()}
+            className="px-3 py-2 rounded-md border bg-white hover:bg-neutral-50"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {isLoading && <p className="text-sm">Loading…</p>}
@@ -65,7 +100,9 @@ export default function DashboardPage() {
                   <span className="font-medium">{n}</span>
                 </span>
               ))}
-              {Object.keys(data.detections_by_severity).length === 0 && <span className="text-neutral-500">No detections yet.</span>}
+              {Object.keys(data.detections_by_severity).length === 0 && (
+                <span className="text-neutral-500">No detections yet.</span>
+              )}
             </div>
           </section>
         </>
