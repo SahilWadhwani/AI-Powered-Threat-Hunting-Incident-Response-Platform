@@ -1,0 +1,19 @@
+id: Web-Scan
+description: Multiple distinct HTTP paths from the same IP within 5 minutes
+severity: medium
+
+where:
+  all:
+    - event_module: "nginx"
+    - event_action: "http_request"
+
+# count distinct paths for each IP
+group_by: ["src_ip"]
+window: "5m"
+
+threshold:
+  distinct_field: "http_path"   # <— NEW: we’ll teach the engine to handle this
+  count: ">= 8"
+
+notes: |
+  Dir brute / probing (e.g., /wp-login.php, /.env, /phpmyadmin). Raise to HIGH if >> threshold.

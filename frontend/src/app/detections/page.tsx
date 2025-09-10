@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/store/auth";
 import { apiGet } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
+import { useHydrateUser } from "@/hooks/useHydrateUser";
 
 type Detection = {
   id: number;
@@ -19,6 +20,7 @@ type Detection = {
 };
 
 export default function DetectionsPage() {
+    useHydrateUser();
   const { accessToken, user } = useAuth();
 
   const { data, isLoading, error, refetch } = useQuery({

@@ -5,8 +5,12 @@ from ..core.deps import get_db
 from ..core.auth_deps import get_current_user
 from ..schemas.cases import CaseCreate, CaseOut
 from ..services.cases import create_case, list_cases, get_case, update_status, update_assignee, add_comment
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/cases", tags=["cases"])
+
+class CommentIn(BaseModel):
+    body: str
 
 @router.post("", response_model=CaseOut, status_code=201)
 def create_case_api(payload: CaseCreate, db: Session = Depends(get_db), user=Depends(get_current_user)):
@@ -64,8 +68,13 @@ def set_assignee(case_id: int, assignee: str, db: Session = Depends(get_db), use
     return {"ok": True, "assignee": c.assignee}
 
 @router.post("/{case_id}/comment")
-def add_comment_api(case_id: int, body: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    cm = add_comment(db, case_id, user.email, body)
+def add_comment_api(
+    case_id: int,
+    payload: CommentIn,  # <-- now expects JSON: {"body": "..."}
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    cm = add_comment(db, case_id, user.email, payload.body)
     if not cm:
         raise HTTPException(status_code=404, detail="case not found")
     return {"ok": True, "comment_id": cm.id}

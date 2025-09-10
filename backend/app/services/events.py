@@ -1,5 +1,6 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import select, and_
 from datetime import datetime
 from dateutil import parser as dateparser
 
@@ -43,3 +44,46 @@ def insert_events(db: Session, items: List[EventIn]) -> Tuple[int, int]:
             fail += 1
     db.commit()
     return ok, fail
+
+
+def list_events(
+    db: Session,
+    event_module: Optional[str] = None,
+    event_action: Optional[str] = None,
+    src_ip: Optional[str] = None,
+    user: Optional[str] = None,
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[EventNormalized]:
+    """Return events with optional filters."""
+
+    q = select(EventNormalized)
+
+    conditions = []
+    if event_module:
+        conditions.append(EventNormalized.event_module == event_module)
+    if event_action:
+        conditions.append(EventNormalized.event_action == event_action)
+    if src_ip:
+        conditions.append(EventNormalized.src_ip == src_ip)
+    if user:
+        conditions.append(EventNormalized.user == user)
+    if start:
+        try:
+            conditions.append(EventNormalized.timestamp >= datetime.fromisoformat(start))
+        except Exception:
+            pass
+    if end:
+        try:
+            conditions.append(EventNormalized.timestamp <= datetime.fromisoformat(end))
+        except Exception:
+            pass
+
+    if conditions:
+        q = q.where(and_(*conditions))
+
+    q = q.order_by(EventNormalized.id.desc()).limit(limit).offset(offset)
+
+    return db.execute(q).scalars().all()

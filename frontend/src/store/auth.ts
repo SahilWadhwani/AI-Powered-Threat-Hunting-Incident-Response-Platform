@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type User = { id: number; email: string; role: string } | null;
 
@@ -11,11 +12,16 @@ type AuthState = {
   logout: () => void;
 };
 
-export const useAuth = create<AuthState>((set) => ({
-  accessToken: null,
-  refreshToken: null,
-  user: null,
-  setTokens: (a, r) => set({ accessToken: a, refreshToken: r }),
-  setUser: (u) => set({ user: u }),
-  logout: () => set({ accessToken: null, refreshToken: null, user: null }),
-}));
+export const useAuth = create<AuthState>()(
+  persist(
+    (set) => ({
+      accessToken: null,
+      refreshToken: null,
+      user: null,
+      setTokens: (a, r) => set({ accessToken: a, refreshToken: r }),
+      setUser: (u) => set({ user: u }),
+      logout: () => set({ accessToken: null, refreshToken: null, user: null }),
+    }),
+    { name: "sentinelx-auth" } // key in localStorage
+  )
+);

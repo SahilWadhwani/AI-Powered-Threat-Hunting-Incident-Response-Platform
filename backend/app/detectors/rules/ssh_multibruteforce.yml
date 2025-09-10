@@ -1,0 +1,18 @@
+id: SSH-MultiUser-Bruteforce
+description: Same source IP attempts SSH logins for many distinct users in a short window
+severity: high
+
+where:
+  all:
+    - event_module: "auth"
+    - event_action: "ssh_login_failed"
+
+group_by: ["src_ip"]
+window: "5m"
+
+threshold:
+  distinct_field: "user"
+  count: ">= 4"
+
+notes: |
+  Triggers when an IP targets 4+ different usernames within 5 minutes.
