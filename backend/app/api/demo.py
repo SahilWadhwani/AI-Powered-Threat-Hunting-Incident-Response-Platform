@@ -274,6 +274,20 @@ def generate_demo(db: Session = Depends(get_db), user=Depends(get_current_user))
 
         db.commit()
 
+
+        # 5) --- 5xx spike demo (possible outage) ---
+        for _ in range(25):
+            db.add(EventNormalized(
+                timestamp=now - timedelta(minutes=random.randint(0, 5)),
+                event_module="nginx",
+                event_action="http_5xx",   # <-- matches YAML rule
+                src_ip=_rand_ip(),
+                user=None,
+                http_path=None,
+                country=None,
+            ))
+        # --- end 5xx spike demo ---
+
         # 5) Run rules
         results = run_all_rules(db, RULES_DIR)
 
@@ -285,6 +299,7 @@ def generate_demo(db: Session = Depends(get_db), user=Depends(get_current_user))
                 "web_scan_paths": len(ATTACK_PATHS),
                 "ssh_multiuser": len(multi_users) + 3,
                 "geo_rare_login": 1,
+                "http_5xx": 25,
             },
             "rules": results,
             "source_ip": src_ip,

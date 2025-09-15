@@ -1,0 +1,10 @@
+id: "HTTP-5xx-Spike"
+severity: "medium"
+window: "5m"
+where:
+  all:
+    - event_module: "nginx"
+    - event_action: "http_5xx"
+group_by: []
+threshold:
+  count: ">= 20"
