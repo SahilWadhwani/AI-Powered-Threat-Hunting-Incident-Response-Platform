@@ -17,15 +17,20 @@ type Detection = {
   status: "open" | "closed" | "triaged" | string;
   tags?: string[];
   event_ids?: number[];
+  features?: Record<string, any> | null; // <--- added
 };
 
 export default function DetectionsPage() {
-    useHydrateUser();
+  useHydrateUser();
   const { accessToken, user } = useAuth();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["detections", accessToken],
-    queryFn: () => apiGet<Detection[]>("/detections?kind=rule&limit=100", accessToken || undefined),
+    queryFn: () =>
+      apiGet<Detection[]>(
+        "/detections?kind=rule&limit=100",
+        accessToken || undefined
+      ),
     enabled: !!accessToken,
   });
 
@@ -35,7 +40,14 @@ export default function DetectionsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Detections</h1>
           <p className="text-sm text-neutral-600">
-            {user ? <>Signed in as <span className="font-medium">{user.email}</span></> : "Not signed in"}
+            {user ? (
+              <>
+                Signed in as{" "}
+                <span className="font-medium">{user.email}</span>
+              </>
+            ) : (
+              "Not signed in"
+            )}
           </p>
         </div>
         <button
@@ -47,7 +59,9 @@ export default function DetectionsPage() {
       </div>
 
       {isLoading && <p className="text-sm">Loading…</p>}
-      {error && <p className="text-sm text-red-600">Failed to load detections.</p>}
+      {error && (
+        <p className="text-sm text-red-600">Failed to load detections.</p>
+      )}
 
       <div className="overflow-x-auto rounded-lg border bg-white">
         <table className="w-full text-sm">
@@ -66,15 +80,28 @@ export default function DetectionsPage() {
             {data?.map((d) => (
               <tr key={d.id} className="border-t hover:bg-neutral-50/60">
                 <td className="px-4 py-2">{d.id}</td>
-                <td className="px-4 py-2">{d.title}</td>
-                <td className="px-4 py-2 text-neutral-600">{d.rule_id || "-"}</td>
+                <td className="px-4 py-2">
+                  {d.title}
+                  {d.features?.anomaly_score !== undefined && (
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-700">
+                      ML
+                    </span>
+                  )}
+                </td>
+                <td className="px-4 py-2 text-neutral-600">
+                  {d.rule_id || "-"}
+                </td>
                 <td className="px-4 py-2">
                   <SeverityBadge level={d.severity} />
                 </td>
                 <td className="px-4 py-2">
-                  <Badge variant="outline" className="capitalize">{d.status}</Badge>
+                  <Badge variant="outline" className="capitalize">
+                    {d.status}
+                  </Badge>
                 </td>
-                <td className="px-4 py-2">{new Date(d.created_at).toLocaleString()}</td>
+                <td className="px-4 py-2">
+                  {new Date(d.created_at).toLocaleString()}
+                </td>
                 <td className="px-4 py-2">
                   <Link
                     href={`/detections/${d.id}`}
@@ -87,8 +114,12 @@ export default function DetectionsPage() {
             ))}
             {data?.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
-                  No detections yet. Generate some via the ingest script, then run rules.
+                <td
+                  colSpan={7}
+                  className="px-4 py-8 text-center text-neutral-500"
+                >
+                  No detections yet. Generate some via the ingest script, then
+                  run rules.
                 </td>
               </tr>
             )}
@@ -106,5 +137,11 @@ function SeverityBadge({ level }: { level: string }) {
   else if (lv === "medium") cls = "bg-yellow-100 text-yellow-800";
   else if (lv === "high") cls = "bg-orange-100 text-orange-800";
   else if (lv === "critical") cls = "bg-red-100 text-red-800";
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${cls}`}>{level}</span>;
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${cls}`}
+    >
+      {level}
+    </span>
+  );
 }

@@ -77,6 +77,7 @@ def get_detection(det_id: int, db: Session = Depends(get_db)):
         "status": det.status,
         "tags": det.tags,
         "event_ids": det.event_ids,
+        "features": det.features_json,
         "evidence_events": [
             {
                 "id": e.id,

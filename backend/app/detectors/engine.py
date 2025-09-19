@@ -289,4 +289,18 @@ def run_all_rules(db: Session, rules_dir: Path) -> Dict[str, int]:
             log.exception("failed running Python rule '%s'", rid)
             results[rid] = -1
 
+    # ML rules (detectors/ml/*.py)
+    ml_dir = rules_dir.parent / "ml"
+    for pr in load_py_rules(ml_dir):
+        rid = pr["id"]
+        run_fn = pr["callable"]
+        try:
+            end = now_utc()
+            start = end - timedelta(hours=24)
+            findings = run_fn(db, since=start, until=end)
+            c = persist_python_findings(db, rid, findings)
+            results[rid] = results.get(rid, 0) + c
+        except Exception:
+            results[rid] = -1
+
     return results
