@@ -29,3 +29,11 @@ def get_current_user(db: Session = Depends(get_db),
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     return user
+
+def require_roles(*allowed_roles: str):
+    def dep(user = Depends(get_current_user)):
+        role = (getattr(user, "role", None) or "").lower()
+        if role not in {r.lower() for r in allowed_roles}:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="insufficient role")
+        return user
+    return dep

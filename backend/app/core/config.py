@@ -4,7 +4,7 @@ class Settings(BaseSettings):
     database_url: str
     redis_url: str
     jwt_secret: str = "change-me"
-    geoip_db_path: str | None = None   # <— add this
+    geoip_db_path: str | None = None   #
 
     model_config = SettingsConfigDict(
         env_prefix="",

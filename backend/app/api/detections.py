@@ -7,13 +7,14 @@ from ..core.deps import get_db
 from ..models.detection import Detection
 from ..models.event import EventNormalized
 from ..detectors.engine import run_all_rules
+from ..core.auth_deps import get_current_user, require_roles
 
 router = APIRouter(prefix="/detections", tags=["detections"])
 
 RULES_DIR = Path(__file__).resolve().parents[1] / "detectors" / "rules"
 
 @router.post("/run")
-def run_rules(db: Session = Depends(get_db)):
+def run_rules(db: Session = Depends(get_db), user = Depends(require_roles("analyst", "admin"))):
     results = run_all_rules(db, RULES_DIR)
     return {"results": results}
 
