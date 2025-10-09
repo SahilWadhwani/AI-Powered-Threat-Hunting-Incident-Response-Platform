@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiGet, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/store/auth";
+import { useState } from "react";
 
 type EvidenceEvent = {
   id: number;
@@ -20,14 +21,14 @@ type EvidenceEvent = {
 type DetectionDetail = {
   id: number;
   title?: string;
-  rule_id?: string;          // <- adjusted to match backend
+  rule_id?: string;
   severity: string;
   status: string;
   summary?: string;
   primary_src_ip?: string | null;
   created_at: string;
   evidence_events?: EvidenceEvent[];
-  features?: Record<string, any> | null;  // <- added for ML
+  features?: Record<string, any> | null;
 };
 
 function majorityIp(evs: EvidenceEvent[] = []): string | null {
@@ -53,6 +54,7 @@ export default function DetectionDetailPage() {
   const router = useRouter();
   const id = Number(params.id);
   const { accessToken } = useAuth();
+  const [showExplain, setShowExplain] = useState(false);
 
   const { data, isLoading, error } = useQuery<DetectionDetail>({
     queryKey: ["detection", id, accessToken],
@@ -114,7 +116,6 @@ export default function DetectionDetailPage() {
     },
   });
 
-  // Loading
   if (isLoading) {
     return (
       <main className="p-6">
@@ -123,7 +124,6 @@ export default function DetectionDetailPage() {
     );
   }
 
-  // 404 or no data
   const httpStatus = (error as any)?.status || (error as any)?.response?.status;
   if (httpStatus === 404 || !data) {
     return (
@@ -171,11 +171,54 @@ export default function DetectionDetailPage() {
         {data.summary && <p className="mt-2 text-sm">{data.summary}</p>}
 
         {/* ML anomaly score if present */}
-        {data.features?.anomaly_score !== undefined && (
+        {data.features?.score !== undefined && (
           <p className="mt-2 text-sm text-red-600">
-            🔎 ML anomaly score:{" "}
-            {Number(data.features.anomaly_score).toFixed(3)}
+            ML anomaly score:{" "}
+            {Number(data.features.score).toFixed(3)}
           </p>
+        )}
+
+        {/* Explainable AI insights - Collapsible */}
+        {data.features?.importance && (
+          <section className="mt-4 rounded-lg border bg-neutral-50 p-3">
+            <button
+              onClick={() => setShowExplain((s) => !s)}
+              className="flex w-full items-center justify-between text-left text-sm font-medium"
+            >
+              <span>Explainable AI Insights</span>
+              <span className="text-neutral-500">
+                {showExplain ? "▲ Hide" : "▼ Show"}
+              </span>
+            </button>
+
+            <div
+              className={`transition-all overflow-hidden ${
+                showExplain ? "max-h-[500px] mt-3 opacity-100" : "max-h-0 opacity-0"
+              } duration-300`}
+            >
+              <div className="text-sm text-neutral-700">
+                {data.features?.explanation ||
+                  "No detailed explanation available."}
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {Object.entries(data.features.importance).map(([key, val]) => (
+                  <div key={key} className="flex items-center justify-between text-sm">
+                    <span className="capitalize w-24">{key}</span>
+                    <div className="flex-1 bg-neutral-200 rounded-full h-2 mx-2">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full"
+                        style={{ width: `${Math.min(Number(val) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-neutral-600 w-10 text-right">
+                      {(Number(val) * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
         )}
 
         {primaryIp && (
