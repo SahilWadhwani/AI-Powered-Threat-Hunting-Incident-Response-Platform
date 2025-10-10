@@ -39,7 +39,7 @@ def run(db: Session, since: datetime | None = None, until: datetime | None = Non
 
     ev = EventNormalized
 
-    # 1️⃣ Fetch recent events
+    #  Fetch recent events
     stmt = (
         select(ev.id, ev.src_ip, ev.user, ev.http_path)
         .where(and_(ev.timestamp >= since, ev.timestamp <= until))
@@ -50,7 +50,7 @@ def run(db: Session, since: datetime | None = None, until: datetime | None = Non
     if not rows:
         return []
 
-    # 2️⃣ Encode categorical features -> numeric for model
+    #  Encode categorical features -> numeric for model
     X = []
     ids = []
     for eid, ip, user, path in rows:
@@ -62,15 +62,15 @@ def run(db: Session, since: datetime | None = None, until: datetime | None = Non
         ])
     X = np.array(X)
 
-    # 3️⃣ Train IsolationForest
+    #  Train IsolationForest
     clf = IsolationForest(n_estimators=50, contamination=0.01, random_state=42)
     preds = clf.fit_predict(X)        # -1 = anomaly, 1 = normal
     scores = clf.decision_function(X) # Lower = more anomalous
 
-    # 4️⃣ Compute global mean of all (approx normal baseline)
+    #  Compute global mean of all (approx normal baseline)
     mean_vec = np.mean(X[preds == 1], axis=0) if np.any(preds == 1) else np.mean(X, axis=0)
 
-    # 5️⃣ Compute per-feature deviations for anomalies
+    #  Compute per-feature deviations for anomalies
     anomalies = []
     for i, (eid, pred, score) in enumerate(zip(ids, preds, scores)):
         if pred != -1:
@@ -96,11 +96,11 @@ def run(db: Session, since: datetime | None = None, until: datetime | None = Non
 
         anomalies.append((eid, score, top_feature, importance_dict, explanation))
 
-    # 6️⃣ Sort anomalies (most anomalous first)
+    #  Sort anomalies (most anomalous first)
     anomalies.sort(key=lambda x: x[1])
     anomalies = anomalies[:TOP_N]
 
-    # 7️⃣ Format findings for DB or API
+    # Format findings for DB or API
     findings: List[Dict[str, Any]] = []
     for eid, score, top, importance, explanation in anomalies:
         findings.append({

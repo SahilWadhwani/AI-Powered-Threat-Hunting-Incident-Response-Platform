@@ -12,13 +12,14 @@ from .respond import router as respond_router
 from fastapi.middleware.cors import CORSMiddleware
 from .metrics import router as metrics_router
 from .demo import router as demo_router
+from ..core.config import settings 
 
 app = FastAPI(title="SentinelX API", version="0.0.1")
 
 # CORS for local Next.js
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=settings.frontend_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
