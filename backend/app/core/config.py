@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     geoip_db_path: str | None = None
 
     # NEW: allow setting one or more frontend origins (comma-separated)
-    frontend_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    frontend_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "https://ai-powered-threat-hunting-incident.vercel.app"]
 
     model_config = SettingsConfigDict(
         env_prefix="",
