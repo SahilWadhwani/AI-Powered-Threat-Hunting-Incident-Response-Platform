@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("admin@local");
+  const [email, setEmail] = useState("admin@local.com");
   const [password, setPassword] = useState("Admin123!");
   const [loading, setLoading] = useState(false);
   const { setTokens, setUser } = useAuth();
